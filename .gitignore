@@ -1,0 +1,31 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# --- Editör / işletim sistemi ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Kaynak PDF'ler (repoya konmuyor) ---
+# Referans makale DOI ile erişilebilir: https://doi.org/10.1038/s41598-025-18243-z
+# Ders yönergesi derse ait bir belge olduğu için paylaşılmıyor.
+/fuzzy.pdf
+/Bulanik_Mantik_Donem_Projesi_Yonergesi.pdf
+
+# --- Veri setleri (Kaggle'dan indirilir, bkz. data/README.md) ---
+data/raw/
+data/*.csv
+data/*.zip
+
+# --- Gizli bilgiler ---
+.env
+kaggle.json
