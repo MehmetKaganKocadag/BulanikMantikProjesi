@@ -64,7 +64,9 @@ Veri seti → [Aşama 1] AFL ile CH seçimi → Küme oluşumu → [Aşama 2] PS
 
 - **MF tipi:** Üçgen MF (Denk. 6). Dilsel terimler Düşük / Orta / Yüksek.
 
-  $$\mu(x;a,b,c)=\max\left(\min\left(\tfrac{x-a}{b-a},\tfrac{c-x}{c-b}\right),0\right)$$
+  ```math
+  \mu(x;a,b,c)=\max\left(\min\left(\frac{x-a}{b-a},\frac{c-x}{c-b}\right),0\right)
+  ```
 
 - **Adaptasyon kuralı:** Her turun başında o anki düğüm değerlerinin dağılımına göre güncellenir:
   - $a \leftarrow \min_i x_i$
@@ -108,7 +110,9 @@ durulaştırmadır.** Yani çıktı kümelerinin birleşimi üzerinden gerçek b
 - **Parçacık:** CH'den BS'ye giden bir yol: $X_i=[CH\to N_1\to\dots\to N_k\to BS]$ (Denk. 12).
 - **Uygunluk (minimize edilir)** (Denk. 11/14):
 
-  $$f(X)=\alpha E(X)+\beta D(X)+\gamma(1-L(X))+\delta(1-PDR(X)),\quad \alpha+\beta+\gamma+\delta=1$$
+  ```math
+  f(X)=\alpha E(X)+\beta D(X)+\gamma(1-L(X))+\delta(1-PDR(X)),\quad \alpha+\beta+\gamma+\delta=1
+  ```
 
   | Bileşen | Tanım | Denk. |
   |---|---|---|
@@ -287,6 +291,7 @@ değer (60.8−53.5)/53.5 = **%13.64**.
 | T15 | **Tablo ve denklem atıf hataları** | s. 12, 26 | "Fitness Eq. (13)" deniyor, doğrusu Denk. 11/14. "Table 4 and Table 6 ... improved percentage" deniyor, doğrusu Tablo 7. |
 | T16 | **Bağlantı kararlılığı tanımı** | Denk. 5 | "SN i'nin aldığı paket / SN i'nin gönderdiği paket" düğümün kendi iletim başarısını ölçmez. ACK tabanlı başarı oranı olarak yorumlanmalı. |
 | T17 | **Ağ ömrü metrikleri yok** | Bölüm 5 | Enerji verimli WSN çalışmalarında standart olan FND/HND/LND (ilk, yarı ve son düğüm ölümü) raporlanmamış, oysa "ağ ömrü uzatma" iddia ediliyor. |
+| T18 | **Veri setleri makaledeki tanımlarla uyuşmuyor** | s. 9 | Kaggle dosyaları indirilip incelendi (ayrıntı: [data/README.md](../data/README.md)). data1'de makalenin saydığı SpO2 ve solunum hızı yok; kayıtların neredeyse hepsi farklı hastalara ait (sürekli izleme serisi değil). data2'de sistolik/diyastolik tansiyon yok; yalnızca 2 hasta, ham "ECG" ve sabite yakın "Pressure" (75–78) sütunları var, sıcaklık 48'e kadar çıkıyor. data3'te hasta kimliği yok; "Pulse" sütunu bpm değil, 0–4095 aralığında 12-bit ham ADC değeri. |
 
 ### 7.4 Sınırlılıklar (makalenin kabul ettikleri + bizim eklediklerimiz)
 
@@ -298,7 +303,8 @@ değer (60.8−53.5)/53.5 = **%13.64**.
   - Yalnızca 5 ve 20 düğümlü küçük ölçek
   - Mutlak sayıların yeniden üretilemezliği (T5)
   - Belirsiz baseline'lar (T12)
-  - Veri setlerinin ağ katmanıyla ilişkisinin zayıf olması (T8)
+  - Veri setlerinin ağ katmanıyla ilişkisinin zayıf olması (T8) ve içeriklerinin makaledeki tanımlarla
+    uyuşmaması (T18)
 
 ## 8. Özgün katkı adayları
 
@@ -322,7 +328,7 @@ eklenebilir.
 | Konu | Makale | Bu projedeki karar | Gerekçe |
 |---|---|---|---|
 | Ortam | MATLAB + Colab | Python 3.13 (numpy, scipy, matplotlib) | Açık kaynak, tekrar üretilebilir |
-| Bulanık motor | Belirtilmemiş | Elle yazılmış FIS | Adaptif MF ve kural ağırlıkları tam kontrol edilebilir ve savunmada satır satır açıklanabilir |
+| Bulanık motor | Belirtilmemiş | Elle yazılmış FIS | Adaptif MF ve kural ağırlıkları tam kontrol edilebilir; her adım şeffaf ve test edilebilir |
 | Çıktı MF'leri | Yok | 5 terim {Çok Düşük … Çok Yüksek}, [0,1] üzerinde üçgen; $z_k$ = 0, 0.25, 0.5, 0.75, 1 | En yaygın tasarım |
 | Kural tabanı | Yok | 3⁴ = 81 kural. Çıktı terimi, girdilerin "iyi yön" seviyelerinin (Düşük=0, Orta=1, Yüksek=2; DBS için ters) toplamından sistematik olarak türetilir | Şeffaf, belgelenebilir, keyfi değil |
 | Kural ağırlığı öğrenme | $+\eta\,\partial J/\partial w$ | Temel modelde $w_k=1$. Öğrenme K2 kapsamında, düzeltilmiş işaretle ($-\eta$) ve sonlu farklar ya da SPSA gradyan tahminiyle | T1 düzeltmesi |
@@ -360,14 +366,3 @@ eklenebilir.
 | CP4 — Katkı önerisi | Seçilen katkı(lar), hipotez ve başarı ölçütü |
 | CP5 — Deneysel sonuçlar | Baseline ve önerilen yöntem tabloları, grafikler, istatistiksel testler |
 | Final | Rapor (8–12 sayfa, IEEE), sunum, canlı demo |
-
-## 11. Savunmaya hazırlık — olası sorular
-
-- Denk. 10 neden gerçek bir centroid değil? Mamdani ile Sugeno arasındaki fark ne?
-- Adaptif MF'de c = max alınırsa en yüksek enerjili düğümün "Yüksek" üyeliği ne olur?
-  (Cevap: üçgen MF'de x = c noktasında μ = 0. "Yüksek" terimi için c'nin ötesi açık uçlu, yani omuz/yamuk MF
-  olmalı. Bu bir tasarım detayıdır ve kodda ele alınacaktır.)
-- 81 kural nasıl üretildi, neden bu yöntem seçildi?
-- Sürekli PSO ayrık bir yol üzerinde nasıl çalışıyor?
-- Makaledeki sayılarla neden birebir karşılaştırma yapılmadı?
-- Hangi varsayım sonuçları en çok etkiliyor? (→ duyarlılık analizi)

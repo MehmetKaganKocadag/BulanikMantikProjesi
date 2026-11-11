@@ -26,6 +26,9 @@ data/raw/
 data/*.csv
 data/*.zip
 
+# --- Kişisel notlar (GitHub'a gönderilmez) ---
+ozel_notlar/
+
 # --- Gizli bilgiler ---
 .env
 kaggle.json

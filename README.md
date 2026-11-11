@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Durum** | 🟡 Checkpoint 1 — Makale ve problem analizi tamamlandı |
+| **Durum** | 🟡 Checkpoint 2 — Uygulama planı tamamlandı, bulanık çekirdek kodlandı |
 | **Dil / Ortam** | Python 3.13 |
 
 ---
@@ -59,7 +59,17 @@ Referans makale iki aşamalı bir model önerir:
                        Yerel en yüksek skor ─▶ CH seçimi ─┴─▶ PSO-GA rota optimizasyonu ─▶ BS
 ```
 
-_(Kural tabanı ve üyelik fonksiyonu parametreleri Checkpoint 2'de eklenecek.)_
+| Bileşen | Tasarım |
+|---|---|
+| Girdi MF'leri | Düşük (sol omuz) / Orta (üçgen) / Yüksek (sağ omuz), tek bir (a, b, c) üçlüsüyle; statik (0, 0.5, 1) ya da adaptif |
+| Çıktı MF'leri | [0, 1] üzerinde 5 üçgen terim; ağırlık merkezleri z = (0.083, 0.25, 0.5, 0.75, 0.917) |
+| Kural tabanı | 81 kural, s = 2·g_E + g_D + g_N + g_L formülüyle sistematik üretilir ([tam tablo](results/tables/rule_base.csv)) |
+| Çıkarım | min-AND, kural ağırlıkları w_k |
+| Durulaştırma | Ağırlıklı ortalama (makale Denk. 10); karşılaştırma için Mamdani centroid |
+
+Ayrıntılar ve gerekçeler: [docs/checkpoint2_uygulama_plani.md](docs/checkpoint2_uygulama_plani.md).
+
+![Statik MF'ler](results/figures/cp2_mf_static.png)
 
 ## Dataset
 
@@ -84,7 +94,20 @@ Bulanık çıkarım motoru, adaptif MF güncellemesinin tam olarak denetlenebilm
 
 ## How to Run
 
-_(Checkpoint 3'te eklenecek.)_
+Repo kökünden:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+```bash
+python experiments/baseline/fis_design.py
+```
+
+İlki birim testleri çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
+`results/` altına üretir.
+
+_(Simülasyon deneyleri Checkpoint 3'te eklenecek.)_
 
 ## Reproduction Experiments
 
@@ -113,7 +136,8 @@ _(Proje ilerledikçe güncellenecek.)_ Referans makalenin bilinen sınırlılık
 ├── requirements.txt
 ├── .gitignore
 ├── docs/                    Checkpoint raporları ve tasarım notları
-├── src/                     Bulanık çıkarım, WSN simülatörü, PSO-GA kaynak kodu
+├── src/afl_wsn/             Bulanık çıkarım, WSN simülatörü, PSO-GA kaynak kodu
+├── tests/                   Birim testleri (unittest)
 ├── data/                    Veri seti açıklamaları (ham veri gitignore'da)
 ├── experiments/baseline/    Referans yöntemin yeniden gerçekleştirme deneyleri
 ├── experiments/proposed/    Özgün katkı deneyleri
@@ -130,6 +154,7 @@ Bkz. [references/README.md](references/README.md).
 
 ## Generative AI Usage Disclosure
 
-Bu projede üretken yapay zekâ araçları (Claude) makale analizi taslağının hazırlanmasında ve repo iskeletinin
-oluşturulmasında yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
+Bu projede üretken yapay zekâ araçları (Claude); makale analizi ve uygulama planı taslaklarının hazırlanmasında,
+repo iskeletinin oluşturulmasında ve bulanık çekirdek kodu ile birim testlerinin ilk sürümünün yazılmasında
+yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
 ayrıntıları proje ilerledikçe bu bölüme ve teknik rapora eklenecektir.
