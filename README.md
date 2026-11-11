@@ -14,7 +14,7 @@
 | | |
 |---|---|
 | Ad Soyad | Mehmet Kağan Kocadağ |
-| Öğrenci No | _(eklenecek)_ |
+| Öğrenci No | 1306230083 |
 | Ders | Bulanık Mantık |
 | Dönem | 2026–2027 |
 
