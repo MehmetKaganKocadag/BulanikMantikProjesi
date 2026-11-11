@@ -272,7 +272,9 @@ w_k \leftarrow \max\left(0, w_k - \eta  g_k\right)
 1. **Bölümleme güncellemesi:** Tur başında canlı düğümlerin girdileri hesaplanır ve adaptif bölümlemeler
    güncellenir (yalnızca adaptif modda).
 2. **Uygunluk eşiği:** Bir düğüm ancak $E_r \ge 0.05$ ise CH adayı olabilir.
-3. **Yerel maksimum kuralı** (makaledeki "yerel bölgesinde en yüksek skor"): Aday düğüm, 25 m içindeki bütün
+3. **Yerel maksimum kuralı** (makaledeki "yerel bölgesinde en yüksek skor"). *Checkpoint 3'te bu kuralın
+   açgözlü bir sürümüne geçildi; gerekçe ve ölçüm: [checkpoint3_baseline.md §2.2](checkpoint3_baseline.md#22-plandan-sapma-ch-seçim-kuralı).*
+   Planlanan ilk biçim: Aday düğüm, 25 m içindeki bütün
    canlı aday komşularından yüksek skora sahipse CH olur. Eşitlikte enerji, sonra düğüm numarası belirler.
 4. **Kümelere katılım:** CH olmayan düğüm, menzilindeki CH'ler arasından p(d) değeri en yüksek olana
    (pratikte en yakın olana) katılır.

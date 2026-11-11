@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Durum** | 🟡 Checkpoint 2 — Uygulama planı tamamlandı, bulanık çekirdek kodlandı |
+| **Durum** | 🟡 Checkpoint 3 — Baseline sistem çalışıyor, ilk deney sonuçları üretildi |
 | **Dil / Ortam** | Python 3.13 |
 
 ---
@@ -104,16 +104,36 @@ python -m unittest discover -s tests -v
 python experiments/baseline/fis_design.py
 ```
 
-İlki birim testleri çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
+İlki birim testlerini (25 test) çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
 `results/` altına üretir.
 
-_(Simülasyon deneyleri Checkpoint 3'te eklenecek.)_
+Yeniden gerçekleştirme deneyleri (veri dosyaları `data/` altında olmalı; bkz. [data/README.md](data/README.md)):
+
+```bash
+python experiments/baseline/run_e1.py
+```
+
+```bash
+python experiments/baseline/run_e2.py
+```
+
+```bash
+python experiments/baseline/run_e3.py
+```
+
+Deneyler mevcut CPU çekirdeklerini paralel kullanır; üçü birlikte 12 çekirdekte yaklaşık 7 dakika sürer.
 
 ## Reproduction Experiments
 
-_(Checkpoint 3'te eklenecek.)_ Planlanan deneyler:
-- 20 düğümlü senaryoda PDR, gecikme, throughput ve enerji verimliliği (makale Tablo 4–6)
-- PSO inertia weight duyarlılık analizi (makale Tablo 10)
+| Deney | Makaledeki karşılığı | Kapsam |
+|---|---|---|
+| E1 | Tablo 4–9, Şekil 12–23 | 4 yöntem × 3 veri seti × 30 tohum × N ∈ {20, 50} |
+| E2 | Tablo 10 (inertia weight) | w ∈ {0.3, 0.5, 0.7, 0.9} × 3 veri seti × 30 tohum × N ∈ {20, 50} |
+| E3 | "5 düğüm" senaryosu | 4 yöntem × 3 veri seti × 30 tohum |
+
+Karşılaştırılan yöntemler: **P** (AFL + PSO-GA, makalenin yöntemi), **B2** (statik bulanık + PSO-GA),
+**B1** (LEACH + PSO-GA), **B0** (LEACH + doğrudan iletim). Ayrıntılar ve bütün tablolar:
+[docs/checkpoint3_baseline.md](docs/checkpoint3_baseline.md).
 
 ## Proposed Extension
 
@@ -121,7 +141,19 @@ _(Checkpoint 4'te eklenecek.)_ Aday katkılar [docs/checkpoint1_makale_analizi.m
 
 ## Experimental Results
 
-_(Checkpoint 5'te eklenecek.)_
+**Yeniden gerçekleştirme (Checkpoint 3):**
+
+- **P, klasik LEACH'e göre** PDR'yi yaklaşık 2 kat, enerji verimliliğini 1.8–2.3 kat artırıyor (p < 0.001).
+- **LEACH + PSO-GA ile PDR farkı yok.** Kazancın büyük kısmı yönlendirmeden geliyor; bulanık CH seçimi daha az
+  CH seçerek enerji verimliliğini %6–24 artırıyor.
+- **Adaptif MF, statik MF'ye göre avantaj sağlamadı** (100 turda %1.5–3.8 daha kötü, çoğu anlamsız).
+- **Makalenin parametreleriyle ağ çoğunlukla bölünmüş:** 20 düğümde CH'lerin %39'unun BS'ye yolu yok; PDR 0.59
+  (makale: %92.5). 50 düğümde PDR 0.84.
+- **Inertia weight'in ağ metriklerine etkisi yok;** makalenin Tablo 10'daki farkları yeniden üretilemedi.
+
+![E1 N=20](results/figures/e1_metrics_N20.png)
+
+_(Özgün katkı sonuçları Checkpoint 5'te eklenecek.)_
 
 ## Limitations
 
@@ -136,7 +168,14 @@ _(Proje ilerledikçe güncellenecek.)_ Referans makalenin bilinen sınırlılık
 ├── requirements.txt
 ├── .gitignore
 ├── docs/                    Checkpoint raporları ve tasarım notları
-├── src/afl_wsn/             Bulanık çıkarım, WSN simülatörü, PSO-GA kaynak kodu
+├── src/afl_wsn/             Kaynak kod
+│   ├── fuzzy/               Üyelik fonksiyonları, kural tabanı, çıkarım
+│   ├── network/             Radyo enerjisi, bağlantı, gecikme, topoloji
+│   ├── clustering.py        AFL / statik bulanık / LEACH CH seçimi
+│   ├── routing.py           PSO-GA, Dijkstra, yol uygunluğu
+│   ├── simulator.py         Tur tabanlı WSN simülatörü
+│   ├── traffic.py           Veri setlerinden paket üretimi
+│   └── experiment.py        Deney koşucusu ve istatistik
 ├── tests/                   Birim testleri (unittest)
 ├── data/                    Veri seti açıklamaları (ham veri gitignore'da)
 ├── experiments/baseline/    Referans yöntemin yeniden gerçekleştirme deneyleri
@@ -155,6 +194,6 @@ Bkz. [references/README.md](references/README.md).
 ## Generative AI Usage Disclosure
 
 Bu projede üretken yapay zekâ araçları (Claude); makale analizi ve uygulama planı taslaklarının hazırlanmasında,
-repo iskeletinin oluşturulmasında ve bulanık çekirdek kodu ile birim testlerinin ilk sürümünün yazılmasında
-yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
+repo iskeletinin oluşturulmasında, bulanık çekirdek, simülatör, yönlendirme ve deney kodlarının ilk
+sürümlerinin yazılmasında ve deney sonuçlarının raporlanmasında yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
 ayrıntıları proje ilerledikçe bu bölüme ve teknik rapora eklenecektir.
