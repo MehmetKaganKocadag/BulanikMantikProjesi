@@ -60,7 +60,7 @@ src/afl_wsn/
 Makaledeki Denk. 16 hatalı olduğu için (CP1, T4) standart model kullanılır. k bit için:
 
 ```math
-E_{TX}(k,d)=\begin{cases}E_{elec}k+\epsilon_{fs}kd^2 & d<d_0\\ E_{elec}k+\epsilon_{mp}kd^4 & d\ge d_0\end{cases}
+E_{TX}(k,d)=\begin{cases}E_{elec}k+\epsilon_{fs}kd^2 & d \lt d_0\\ E_{elec}k+\epsilon_{mp}kd^4 & d\ge d_0\end{cases}
 \qquad E_{RX}(k)=E_{elec}k \qquad d_0=\sqrt{\epsilon_{fs}/\epsilon_{mp}}
 ```
 
@@ -86,9 +86,9 @@ E_{TX}(k,d)=\begin{cases}E_{elec}k+\epsilon_{fs}kd^2 & d<d_0\\ E_{elec}k+\epsilo
 - **Başarı olasılığı:** Mesafeye bağlı lojistik eğri. Her iletim bu olasılıkla bağımsız Bernoulli denemesidir
   (ARQ yok):
 
-  ```math
-  p(d)=\frac{p_{max}}{1+\exp\left((d-d_{50})/\sigma\right)}
-  ```
+```math
+p(d)=\frac{p_{max}}{1+\exp\left((d-d_{50})/\sigma\right)}
+```
 
   Parametreler: $p_{max}$ = 0.98, $d_{50}$ = 30 m, σ = 3 m.
 
@@ -218,7 +218,7 @@ Kurallar tek bir formülle üretilir ([rulebase.py](../src/afl_wsn/fuzzy/rulebas
 
 1. **İyilik seviyesi:** Her girdi terimine g ∈ {0, 1, 2} verilir. Yüksek = 2'dir; mesafede yön terstir
    (Düşük mesafe = 2).
-2. **Ağırlıklı toplam:** $s = 2\,g_E + g_D + g_N + g_L$, aralığı [0, 10]. Enerjinin ağırlığı 2'dir, çünkü CH
+2. **Ağırlıklı toplam:** $s = 2 g_E + g_D + g_N + g_L$, aralığı [0, 10]. Enerjinin ağırlığı 2'dir, çünkü CH
    rolü (alım, birleştirme, iletim) en çok enerji harcayan roldür. Tükenmek üzere olan bir düğümün CH olması
    ağ ömrünü doğrudan kısaltır.
 3. **Çıktı terimi:** Z = round(4·s/10).
@@ -254,12 +254,12 @@ kırılmalar, 5 çıktı terimine yuvarlanan kural tabanının basamaklı yapıs
 
 ### 4.6 Kural ağırlığı öğrenme (Denk. 8) — K2 kapsamında
 
-- **Makalenin formülü:** $w_k \leftarrow w_k + \eta\,\partial J/\partial w_k$. İşareti hatalıdır (CP1, T1).
+- **Makalenin formülü:** $w_k \leftarrow w_k + \eta \partial J/\partial w_k$. İşareti hatalıdır (CP1, T1).
 - **Bizim uygulamamız:** İşaret düzeltilir ve ağırlıkların negatif olması engellenir:
 
-  ```math
-  w_k \leftarrow \max\left(0,\ w_k - \eta\, g_k\right)
-  ```
+```math
+w_k \leftarrow \max\left(0, w_k - \eta  g_k\right)
+```
 
   Burada $g_k$, $\partial J/\partial w_k$ gradyanının tahminidir.
   - J = α·E_total + β·Delay + γ·(1−PDR) (Denk. 7), bir yeniden kümeleme dönemi boyunca ölçülür.

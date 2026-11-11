@@ -64,9 +64,9 @@ Veri seti → [Aşama 1] AFL ile CH seçimi → Küme oluşumu → [Aşama 2] PS
 
 - **MF tipi:** Üçgen MF (Denk. 6). Dilsel terimler Düşük / Orta / Yüksek.
 
-  ```math
-  \mu(x;a,b,c)=\max\left(\min\left(\frac{x-a}{b-a},\frac{c-x}{c-b}\right),0\right)
-  ```
+```math
+\mu(x;a,b,c)=\max\left(\min\left(\frac{x-a}{b-a},\frac{c-x}{c-b}\right),0\right)
+```
 
 - **Adaptasyon kuralı:** Her turun başında o anki düğüm değerlerinin dağılımına göre güncellenir:
   - $a \leftarrow \min_i x_i$
@@ -76,7 +76,7 @@ Veri seti → [Aşama 1] AFL ile CH seçimi → Küme oluşumu → [Aşama 2] PS
   $b^{(t+1)} = \lambda b^{(t)} + (1-\lambda) b^{new}$
 - **Çelişki:** Denk. 7'de ise MF parametrelerinin "optimizasyon algoritmalarıyla" bir maliyet fonksiyonunu
   minimize ederek güncellendiği söylenir:
-  $J=\alpha E_{total}+\beta\, Delay+\gamma(1-PDR)$.
+  $J=\alpha E_{total}+\beta  Delay+\gamma(1-PDR)$.
   Hangi mekanizmanın gerçekten kullanıldığı belirsizdir.
 
 ### 3.4 Kural tabanı (Denk. 8)
@@ -84,7 +84,7 @@ Veri seti → [Aşama 1] AFL ile CH seçimi → Küme oluşumu → [Aşama 2] PS
 - **Genel kural biçimi:**
   `IF Er is A AND DBS is B AND Nd is C AND Ls is D THEN CH suitability is Z`
 - **Kural ağırlıkları:** $w_k$ ile ağırlıklandırılır ve şu formülle güncellenir:
-  $w_k^{(t+1)} = w_k^{(t)} + \eta\,\partial J/\partial w_k$
+  $w_k^{(t+1)} = w_k^{(t)} + \eta \partial J/\partial w_k$
 - **Eksik bilgi:** Kural sayısı, kuralların kendisi ve η değeri verilmemiştir.
 
 ### 3.5 Çıkarım ve durulaştırma (Denk. 9–10)
@@ -110,13 +110,13 @@ durulaştırmadır.** Yani çıktı kümelerinin birleşimi üzerinden gerçek b
 - **Parçacık:** CH'den BS'ye giden bir yol: $X_i=[CH\to N_1\to\dots\to N_k\to BS]$ (Denk. 12).
 - **Uygunluk (minimize edilir)** (Denk. 11/14):
 
-  ```math
-  f(X)=\alpha E(X)+\beta D(X)+\gamma(1-L(X))+\delta(1-PDR(X)),\quad \alpha+\beta+\gamma+\delta=1
-  ```
+```math
+f(X)=\alpha E(X)+\beta D(X)+\gamma(1-L(X))+\delta(1-PDR(X)),\quad \alpha+\beta+\gamma+\delta=1
+```
 
   | Bileşen | Tanım | Denk. |
   |---|---|---|
-  | $E(X)$ | Atlama enerjilerinin toplamı; tek atlama $E_{transmit}=E_{elec}\,d+\epsilon_{amp}\,d^n$ | 15–16 |
+  | $E(X)$ | Atlama enerjilerinin toplamı; tek atlama $E_{transmit}=E_{elec} d+\epsilon_{amp} d^n$ | 15–16 |
   | $D(X)$ | Atlama gecikmelerinin toplamı | 17 |
   | $L(X)$ | Bağlantı kararlılıklarının ortalaması | 18 |
   | $PDR(X)$ | Atlama başarı oranlarının **çarpımı** | 19 |
@@ -274,10 +274,10 @@ değer (60.8−53.5)/53.5 = **%13.64**.
 
 | # | Bulgu | Konum | Açıklama |
 |---|---|---|---|
-| T1 | **İşaret hatası** | Denk. 8 | J minimize edilmek isteniyor ama güncelleme $+\eta\,\partial J/\partial w$ (gradyan çıkışı). Doğrusu $-\eta$ olmalı. J'nin $w_k$'ye göre analitik türevi de tanımlı değil, çünkü simülasyon çıktısı. |
+| T1 | **İşaret hatası** | Denk. 8 | J minimize edilmek isteniyor ama güncelleme $+\eta \partial J/\partial w$ (gradyan çıkışı). Doğrusu $-\eta$ olmalı. J'nin $w_k$'ye göre analitik türevi de tanımlı değil, çünkü simülasyon çıktısı. |
 | T2 | **"Centroid" adlandırması** | Denk. 10 | Formül ağırlıklı ortalama. Sistemin Mamdani mi Sugeno mu olduğu belirsiz. |
 | T3 | **İki farklı MF adaptasyonu** | Denk. 1 ve 7 | Biri min/ort./max sezgisi, diğeri J'yi minimize eden optimizasyon. Hangisi kullanıldı? |
-| T4 | **Enerji modeli hatalı** | Denk. 16 | $E_{elec}\cdot d+\epsilon_{amp}\cdot d^n$: bit sayısı yok, $E_{elec}$ mesafeyle çarpılmış. Standart birinci derece radyo modeli $E_{TX}(k,d)=E_{elec}k+\epsilon_{fs}kd^2$ (d<d₀), $E_{elec}k+\epsilon_{mp}kd^4$ (d≥d₀). |
+| T4 | **Enerji modeli hatalı** | Denk. 16 | $E_{elec}\cdot d+\epsilon_{amp}\cdot d^n$: bit sayısı yok, $E_{elec}$ mesafeyle çarpılmış. Standart birinci derece radyo modeli $E_{TX}(k,d)=E_{elec}k+\epsilon_{fs}kd^2$ (d < d₀), $E_{elec}k+\epsilon_{mp}kd^4$ (d≥d₀). |
 | T5 | **Birimler ve büyüklükler tutarsız** | Tablo 4–6 ve Şekil 18–23 | Throughput tabloda ~61 bps, şekilde ~900 000 bps. EE tabloda 9.1 "J/bit", şekilde ~0.6, formülde bit/J. Bu radyo modeliyle gerçekçi EE milyonlarca bit/J mertebesinde olurdu (≈ 1/(E_elec + ε·d²) ≈ 3·10⁶ bit/J, d=50 m için). Hiçbir değer fiziksel olarak tutarlı değil. |
 | T6 | **Gecikme iki farklı tanımla verilmiş** | Denk. 17 ve 26 | Biri toplam, diğeri atlama başına ortalama. |
 | T7 | **PSO ile GA kodlaması uyuşmuyor** | Tablo 3 ve s. 12–13 | Tablo 3 "two-point crossover, bit-flip mutation" diyor; metin yol tabanlı çaprazlama ve düğüm değiştirme mutasyonu anlatıyor. Bit-flip, yol (düğüm dizisi) kodlamasıyla uyumlu değil. |
@@ -331,7 +331,7 @@ eklenebilir.
 | Bulanık motor | Belirtilmemiş | Elle yazılmış FIS | Adaptif MF ve kural ağırlıkları tam kontrol edilebilir; her adım şeffaf ve test edilebilir |
 | Çıktı MF'leri | Yok | 5 terim {Çok Düşük … Çok Yüksek}, [0,1] üzerinde üçgen; $z_k$ = 0, 0.25, 0.5, 0.75, 1 | En yaygın tasarım |
 | Kural tabanı | Yok | 3⁴ = 81 kural. Çıktı terimi, girdilerin "iyi yön" seviyelerinin (Düşük=0, Orta=1, Yüksek=2; DBS için ters) toplamından sistematik olarak türetilir | Şeffaf, belgelenebilir, keyfi değil |
-| Kural ağırlığı öğrenme | $+\eta\,\partial J/\partial w$ | Temel modelde $w_k=1$. Öğrenme K2 kapsamında, düzeltilmiş işaretle ($-\eta$) ve sonlu farklar ya da SPSA gradyan tahminiyle | T1 düzeltmesi |
+| Kural ağırlığı öğrenme | $+\eta \partial J/\partial w$ | Temel modelde $w_k=1$. Öğrenme K2 kapsamında, düzeltilmiş işaretle ($-\eta$) ve sonlu farklar ya da SPSA gradyan tahminiyle | T1 düzeltmesi |
 | Adaptif MF | min / ort. / max + λ | Denk. 1 uygulanır; λ = 0.7 başlangıç, duyarlılığı raporlanır | E3 |
 | Enerji modeli | Hatalı Denk. 16 | Heinzelman birinci derece radyo modeli, Tablo 3 parametreleriyle | T4 düzeltmesi |
 | Bağlantı modeli | Yok | Mesafeye bağlı başarı olasılığı (ör. menzil sonuna doğru azalan lojistik eğri), $L_s$ = ACK oranının hareketli ortalaması | E6, T16 |
