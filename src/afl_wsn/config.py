@@ -36,6 +36,7 @@ class SimConfig:
     comm_range: float = 25.0
     e_init: float = 2.0
     packet_bits: int = 512 * 8
+    placement: str = "uniform"  # "uniform" (düzgün rastgele) | "data" (veri kaydından konum, CP3 §11)
 
     # --- Radyo enerji modeli ---
     e_elec: float = 50e-9  # J/bit (Tablo 3)
@@ -68,7 +69,8 @@ class SimConfig:
     heartbeat: int = 10
 
     # --- Kümeleme ---
-    clustering: str = "afl"  # "afl" | "static_fuzzy" | "leach"
+    clustering: str = "afl"  # "afl" | "static_fuzzy" | "leach" | "kmeans"
+    n_ch: int = 0  # > 0: CH sayısı sabit (makalenin "5/20 küme" yorumu, CP3 §11); 0: serbest
     ch_min_energy: float = 0.05  # CH adaylığı için E_r alt sınırı
     leach_p: float = 0.1
     mf_lambda: float = 0.7

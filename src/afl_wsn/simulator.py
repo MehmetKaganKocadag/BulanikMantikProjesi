@@ -19,13 +19,13 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .clustering import FuzzyClustering, LeachClustering, form_clusters
+from .clustering import FuzzyClustering, KMeansClustering, LeachClustering, form_clusters
 from .config import SimConfig
 from .network.link import hop_delay, p_success
 from .network.radio import e_rx, e_tx
-from .network.topology import Topology, deploy
+from .network.topology import Topology, deploy, from_positions
 from .routing import RouteResult, build_graph, find_route
-from .traffic import TrafficSource
+from .traffic import TrafficSource, load_placement
 
 
 @dataclass
@@ -42,15 +42,26 @@ def make_clustering(cfg: SimConfig):
         return FuzzyClustering(cfg, adaptive=False)
     if cfg.clustering == "leach":
         return LeachClustering(cfg)
+    if cfg.clustering == "kmeans":
+        return KMeansClustering(cfg)
     raise ValueError(f"Bilinmeyen kümeleme: {cfg.clustering}")
 
 
+def data_topology(cfg: SimConfig, dataset: str, seed: int) -> tuple[Topology, np.ndarray]:
+    """Veriden yerleşim (CP3 §11): tohuma göre N kayıt seçilir (tekrarsız), iki sütunu alana
+    ölçeklenip düğüm konumu olur. Döndürür: (topoloji, düğüm başına akış ofseti = kayıt indeksi)."""
+    pts = load_placement(dataset)
+    idx = np.random.default_rng([seed, 0]).choice(len(pts), size=cfg.n_nodes, replace=len(pts) < cfg.n_nodes)
+    return from_positions(pts[idx] * cfg.area, cfg), idx
+
+
 class Simulation:
-    def __init__(self, cfg: SimConfig, stream: np.ndarray, seed: int, topo: Topology | None = None) -> None:
+    def __init__(self, cfg: SimConfig, stream: np.ndarray, seed: int, topo: Topology | None = None,
+                 offsets: np.ndarray | None = None) -> None:
         self.cfg = cfg
         # Tohum akışları: topoloji ve trafik yöntemden bağımsızdır → yöntemler eşleştirilmiş karşılaştırılır.
         self.topo = topo if topo is not None else deploy(cfg, np.random.default_rng([seed, 0]))
-        self.traffic = TrafficSource(stream, cfg, np.random.default_rng([seed, 1]))
+        self.traffic = TrafficSource(stream, cfg, np.random.default_rng([seed, 1]), offsets=offsets)
         self.rng = np.random.default_rng([seed, 2])
         n = cfg.n_nodes
         self.energy = np.full(n, cfg.e_init, dtype=float)
@@ -73,6 +84,12 @@ class Simulation:
         ch = self.clustering.select(self.energy, self.ls, alive, topo, self.rng, epoch)
         self.parent, self.ch = form_clusters(ch, alive, topo, cfg)
         t1 = time.perf_counter()
+        mem = np.flatnonzero(alive & ~self.ch)
+        if mem.size:
+            dm = topo.dist[mem, self.parent[mem]]
+            self.cost["member_d"].append(float(dm.mean()))
+            self.cost["member_oor"] += int((dm > cfg.comm_range).sum())
+            self.cost["n_members"] += int(mem.size)
         self.graph = build_graph(topo, alive, self.ls, cfg)
         self.routes: dict[int, RouteResult] = {}
         for h in np.flatnonzero(self.ch):
@@ -99,7 +116,8 @@ class Simulation:
         D = topo.dist
         max_rounds = cfg.n_rounds
         self.cost = {"cluster_s": 0.0, "route_s": 0.0, "epochs": 0, "evals": 0, "route_fitness": [],
-                     "disconnected": 0, "n_routes": 0, "hops": []}
+                     "disconnected": 0, "n_routes": 0, "hops": [], "member_d": [], "member_oor": 0,
+                     "n_members": 0}
 
         rec = {key: [] for key in ("generated", "delivered", "delay_sum", "energy", "alive", "n_ch")}
         delays_all: list[float] = []
@@ -223,6 +241,8 @@ class Simulation:
             "route_hops_mean": float(np.mean(c["hops"])) if c["hops"] else np.nan,
             "route_fitness_mean": float(np.mean(c["route_fitness"])) if c["route_fitness"] else np.nan,
             "disconnected_ch_frac": c["disconnected"] / c["n_routes"] if c["n_routes"] else np.nan,
+            "member_dist_mean": float(np.mean(c["member_d"])) if c["member_d"] else np.nan,
+            "member_out_of_range_frac": c["member_oor"] / c["n_members"] if c["n_members"] else np.nan,
             "cluster_ms_per_epoch": 1e3 * c["cluster_s"] / max(c["epochs"], 1),
             "route_ms_per_epoch": 1e3 * c["route_s"] / max(c["epochs"], 1),
             "fitness_evals_per_epoch": c["evals"] / max(c["epochs"], 1),

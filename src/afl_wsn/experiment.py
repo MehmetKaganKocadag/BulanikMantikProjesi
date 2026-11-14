@@ -11,7 +11,7 @@ import pandas as pd
 from scipy import stats
 
 from .config import SimConfig
-from .simulator import Simulation
+from .simulator import Simulation, data_topology
 from .traffic import get_stream
 
 # CP2 §6 — karşılaştırılan yapılandırmalar
@@ -23,6 +23,7 @@ METHODS: dict[str, dict] = {
     "R1": {"clustering": "afl", "routing": "dijkstra", "label": "AFL + Dijkstra"},
     "R2": {"clustering": "afl", "routing": "pso", "label": "AFL + yalnız PSO"},
     "R3": {"clustering": "afl", "routing": "ga", "label": "AFL + yalnız GA"},
+    "KM": {"clustering": "kmeans", "routing": "pso_ga", "label": "k-means + PSO-GA"},  # yalnız sabit K (CP3 §11)
 }
 
 METRICS = ["pdr", "delay_ms", "throughput_bps", "ee_bit_per_j"]
@@ -34,7 +35,10 @@ def run_one(task: dict) -> dict:
     m = METHODS[task["method"]]
     cfg = SimConfig().with_(clustering=m["clustering"], routing=m["routing"], **task.get("overrides", {}))
     stream = get_stream(task["dataset"], np.random.default_rng([task["seed"], 9]))
-    res = Simulation(cfg, stream, task["seed"]).run()
+    topo = offsets = None
+    if cfg.placement == "data":
+        topo, offsets = data_topology(cfg, task["dataset"], task["seed"])
+    res = Simulation(cfg, stream, task["seed"], topo=topo, offsets=offsets).run()
     row = {"method": task["method"], "dataset": task["dataset"], "seed": task["seed"], **task.get("tag", {})}
     row.update(res.summary)
     if task.get("keep_rounds"):
@@ -93,7 +97,9 @@ def paired_tests(df: pd.DataFrame, ref: str, others: list[str], by: list[str], m
         piv = {m: g.pivot_table(index="seed", columns="method", values=m) for m in metrics}
         for other in others:
             for m in metrics:
-                p = piv[m][[ref, other]].dropna()
+                p = piv[m].reindex(columns=[ref, other]).dropna()
+                if len(p) < 2:  # ör. hiç paket ulaşmadıysa gecikme tanımsız → test yapılamaz
+                    continue
                 diff = p[ref] - p[other]
                 if (diff == 0).all():
                     w_p, t_stat, t_p = 1.0, 0.0, 1.0

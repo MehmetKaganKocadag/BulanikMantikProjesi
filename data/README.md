@@ -78,3 +78,16 @@ Veriler **trafik kaynağı** olarak kullanılır (ayrıntı:
 - Ölçüm belirgin değişirse, z-skora göre anormalse ya da uzun süredir paket göndermemişse paket üretir.
 
 Böylece veri setleri ağ yükünü ve dolayısıyla enerji ve gecikmeyi belirler.
+
+**Veriden yerleşim (yalnızca E6):** Makalenin şekillerinde veri kayıtları fizyolojik eksenlere çizilmiş. Bu
+yorumu test etmek için E6'da her düğüm bir veri kaydına oturtulur ve kaydın iki sütunu min-max ile
+100 × 100 m alana ölçeklenip konum olarak kullanılır. Yaş sütunu olmadığı için kullanılan sütunlar:
+
+| Veri seti | x | y |
+|---|---|---|
+| data1 | Heart_Rate | Systolic_BP |
+| data2 | Temperature Data | ECG Data |
+| data3 | Temp | Pulse |
+
+data2'de kayıtların 130/150'sinde ECG = 0 olduğundan düğümler alanın kenarında toplanır ve ağ kopar
+(bkz. [CP3 §11](../docs/checkpoint3_baseline.md#11-e6--yorum-testi-düğüm-mü-küme-mi)).

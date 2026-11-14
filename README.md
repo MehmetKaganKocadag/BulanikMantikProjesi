@@ -104,7 +104,7 @@ python -m unittest discover -s tests -v
 python experiments/baseline/fis_design.py
 ```
 
-İlki birim testlerini (25 test) çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
+İlki birim testlerini (32 test) çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
 `results/` altına üretir.
 
 Yeniden gerçekleştirme deneyleri (veri dosyaları `data/` altında olmalı; bkz. [data/README.md](data/README.md)):
@@ -121,7 +121,12 @@ python experiments/baseline/run_e2.py
 python experiments/baseline/run_e3.py
 ```
 
-Deneyler mevcut CPU çekirdeklerini paralel kullanır; üçü birlikte 12 çekirdekte yaklaşık 7 dakika sürer.
+```bash
+python experiments/baseline/run_e6.py
+```
+
+Deneyler mevcut CPU çekirdeklerini paralel kullanır. 12 çekirdekte E1–E3 birlikte yaklaşık 7 dakika, E6 yaklaşık
+12 dakika sürer.
 
 ## Reproduction Experiments
 
@@ -130,6 +135,7 @@ Deneyler mevcut CPU çekirdeklerini paralel kullanır; üçü birlikte 12 çekir
 | E1 | Tablo 4–9, Şekil 12–23 | 4 yöntem × 3 veri seti × 30 tohum × N ∈ {20, 50} |
 | E2 | Tablo 10 (inertia weight) | w ∈ {0.3, 0.5, 0.7, 0.9} × 3 veri seti × 30 tohum × N ∈ {20, 50} |
 | E3 | "5 düğüm" senaryosu | 4 yöntem × 3 veri seti × 30 tohum |
+| E6 | "5/20 = küme başı sayısı" yorumu, Şekil 3–5 | 100 sensör, K ∈ {5, 20} sabit CH × {rastgele, veriden} yerleşim × 5 yöntem (+ k-means) × 3 veri seti × 30 tohum |
 
 Karşılaştırılan yöntemler: **P** (AFL + PSO-GA, makalenin yöntemi), **B2** (statik bulanık + PSO-GA),
 **B1** (LEACH + PSO-GA), **B0** (LEACH + doğrudan iletim). Ayrıntılar ve bütün tablolar:
@@ -150,6 +156,9 @@ _(Checkpoint 4'te eklenecek.)_ Aday katkılar [docs/checkpoint1_makale_analizi.m
 - **Makalenin parametreleriyle ağ çoğunlukla bölünmüş:** 20 düğümde CH'lerin %39'unun BS'ye yolu yok; PDR 0.59
   (makale: %92.5). 50 düğümde PDR 0.84.
 - **Inertia weight'in ağ metriklerine etkisi yok;** makalenin Tablo 10'daki farkları yeniden üretilemedi.
+- **Makalenin "5 ve 20 SN" ifadesi belirsiz** (düğüm sayısı mı, küme sayısı mı). İki yorum da test edildi (E6).
+  100 sensör ve 5/20 küme başıyla PDR 0.71–0.91'e çıkıyor. Adaptif MF'nin avantajsızlığı iki yorumda da aynı.
+  Sabit CH sayısında basit k-means de AFL kadar iyi.
 
 ![E1 N=20](results/figures/e1_metrics_N20.png)
 

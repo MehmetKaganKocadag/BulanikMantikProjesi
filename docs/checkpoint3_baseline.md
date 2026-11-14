@@ -4,7 +4,8 @@
 > ilk deney sonuçları üretilecektir.
 >
 > Bu aşamada simülatör, AFL tabanlı CH seçimi ve hibrit PSO-GA yönlendirme Checkpoint 2'deki plana göre
-> yazıldı, test edildi ve üç deney (E1–E3) çalıştırıldı. Makaleye yapılan denklem, tablo ve şekil atıfları
+> yazıldı, test edildi ve üç deney (E1–E3) çalıştırıldı. Makaledeki "5 ve 20 SN" ifadesinin iki olası yorumu
+> ayrıca E6'da test edildi (§11). Makaleye yapılan denklem, tablo ve şekil atıfları
 > makalenin kendi numaralarıdır.
 
 ---
@@ -14,9 +15,9 @@
 | | |
 |---|---|
 | Uygulanan | 4 girdili adaptif bulanık CH seçimi, rastgele anahtar kodlamalı PSO-GA, tur tabanlı WSN simülatörü, 3 veri setinden trafik üretimi, LEACH ve statik bulanık karşılaştırmaları |
-| Testler | 25 birim testi geçiyor (`python -m unittest discover -s tests -v`) |
-| Deneyler | E1 (ana karşılaştırma, 720 koşu), E2 (inertia weight, 720 koşu), E3 (5 düğüm, 360 koşu) |
-| Süre | Toplam ≈ 7 dk (12 çekirdek, paralel) |
+| Testler | 32 birim testi geçiyor (`python -m unittest discover -s tests -v`) |
+| Deneyler | E1 (ana karşılaştırma, 720 koşu), E2 (inertia weight, 720 koşu), E3 (5 düğüm, 360 koşu), E6 ("5/20" yorum testi, 1800 koşu) |
+| Süre | E1–E3 ≈ 7 dk, E6 ≈ 12 dk (12 çekirdek, paralel) |
 
 **Ana bulgular:**
 
@@ -33,6 +34,11 @@
    yöntemden tutarlı biçimde %1.5–3.8 daha kötü. Farkların çoğu Holm düzeltmesinden sonra anlamlı değil.
 5. **Inertia weight (w) ağ metriklerini etkilemiyor.** Makalenin Tablo 10'daki 88.2 → 92.5 PDR farkı
    yeniden üretilemedi.
+6. **Ana sonuçlar "5/20"nin nasıl yorumlandığına bağlı değil, tek bir fark dışında** (§11). "5/20 = küme başı
+   sayısı" yorumunda (100 sensör) PDR 0.71–0.91'e çıkıyor. Adaptif MF yine statik MF'den iyi değil, B0 yine
+   açık ara en kötü. Fark şu: CH sayısı sabitlenince LEACH (B1) küme başlarını rastgele seçtiği için PDR'de de
+   geride kalıyor (%3–28). Basit k-means kümeleme de P kadar iyi. Sensörler veri kayıtlarından
+   yerleştirildiğinde (makale şekillerinin olası üretimi) data2'de ağ tamamen kopuyor.
 
 ## 2. Uygulama
 
@@ -209,7 +215,8 @@ gecikmede %40) bu deney düzeninde yeniden üretilemedi.
 
 5 düğümde ağ neredeyse hiç bağlantılı değil. Bu durumda yöntemlerin farkı anlamsızlaşıyor. Makalenin 5 düğüm
 için raporladığı ~%91 PDR, belirtilen alan ve menzille fiziksel olarak tutarlı değil (CP1, T9). Bu, makaledeki
-"5 ve 20 düğüm"ün aslında küme sayısı olabileceği yorumunu güçlendiriyor (CP1, T8).
+"5 ve 20 düğüm"ün aslında küme sayısı olabileceği yorumunu güçlendiriyor (CP1, T8). Bu yorum §11'de test
+edildi.
 
 ## 7. Makaleyle karşılaştırma
 
@@ -275,6 +282,117 @@ Bu aşamanın bulguları katkı seçimini doğrudan yönlendiriyor:
 | K2 — Mamdani / Sugeno, kural ağırlığı öğrenme | Bulanık çekirdeğin kendisini geliştirmeye yönelik |
 | K4 / K5 — Gürültü, ölçeklenebilirlik | N = 50'deki davranış farklı; ölçek etkisi belirgin |
 
+## 11. E6 — Yorum testi: düğüm mü, küme mi?
+
+Makale "5 ve 20 SN" ifadesini iki ayrı anlamda kullanıyor: Tablo 3'te sensör sayısı, Şekil 3–11'de ise yüzlerce
+noktanın gruplandığı küme sayısı (CP1, T8 ve T20–T24). Şekillerdeki noktalar da fiziksel konum değil, veri
+kayıtlarının fizyolojik değerleri. Bulguların hangi yoruma bağlı olduğunu görmek için iki yorum da test edildi.
+
+| | Yorum A — 5/20 sensör | Yorum B — 5/20 küme başı |
+|---|---|---|
+| Sensör sayısı | 5 ya da 20 | 100 (makalenin ölçeklenebilirlik örneği "100+ SN") |
+| CH sayısı | Serbest (§2.2) | Sabit K ∈ {5, 20} |
+| Yerleşim | Düzgün rastgele | Düzgün rastgele **ve** veriden yerleşim |
+| Deney | E1 (N = 20), E3 (N = 5) | E6 (bu bölüm) |
+
+### 11.1 Düzen
+
+- **Sabit K:**
+  - Bulanık yöntemler (P, B2) en yüksek skorlu K düğümü, birbirinden en az r = A / √(πK) uzakta olacak
+    biçimde seçiyor: K = 5'te ≈ 25 m, K = 20'de ≈ 13 m. r, K dairenin alanı kaplaması için gereken yarıçap.
+  - LEACH'te p = K/N.
+  - Her düğüm, menzil dışında kalsa bile en yakın CH'ye katılıyor; aksi halde CH sayısı K'da kalmaz.
+- **KM (k-means + PSO-GA):** Makale şekillerinde küme merkezleri noktaların arasındaki boşlukta duruyor (T24).
+  Bu görüntünün karşılığı olarak k-means eklendi. Merkez bir düğüm olmadığı için her kümenin CH'si o kümedeki
+  en yüksek enerjili düğüm oluyor; eşitlik varsa merkeze en yakın düğüm seçiliyor.
+- **Veriden yerleşim:** Her düğüm bir veri kaydı. Kaydın iki sütunu min-max ile 100 × 100 m'ye ölçekleniyor.
+  Düğüm, trafik akışını kendi kaydından itibaren okuyor. Veri setlerinde yaş sütunu olmadığı için şu sütunlar
+  kullanıldı:
+  - data1: kalp hızı – sistolik tansiyon
+  - data2: sıcaklık – ECG
+  - data3: sıcaklık – nabız
+- **Kapsam:** 100 düğüm, 3 veri seti, 30 tohum, 100 tur, 5 yöntem, 2 yerleşim ve 2 K değeri: toplam 1800 koşu.
+  Testler P'ye karşı tohum eşleştirmeli Wilcoxon ile yapıldı (Holm düzeltmeli, 187 test).
+
+![E6 veriden yerleşim örneği](../results/figures/e6_placement_example.png)
+
+Şekil, makalenin Şekil 3–5'ine karşılık geliyor (tohum 0, veriden yerleşim):
+- k-means merkezleri (×) makaledeki gibi noktaların arasındaki boşluğa düşüyor; P'nin CH'leri (●) ise her
+  zaman bir düğüm.
+- data2'de 100 düğüm yalnızca 16 farklı konuma oturuyor. Kayıtların 130/150'sinde ECG = 0 olduğu için
+  düğümler alanın kenarlarına diziliyor. data2'nin hiçbir kaydı BS'ye 50 m'den yakın değil.
+
+### 11.2 Sonuçlar
+
+![E6 metrikleri](../results/figures/e6_metrics.png)
+
+**PDR** (30 tohum ortalaması):
+
+| Yerleşim | K | Veri seti | P | B2 | B1 | B0 | KM |
+|---|---|---|---|---|---|---|---|
+| Rastgele | 5 | data1 / data2 / data3 | 0.714 / 0.721 / 0.717 | 0.700 / 0.710 / 0.700 | 0.560 / 0.564 / 0.566 | 0.217 / 0.218 / 0.227 | 0.717 / 0.705 / 0.713 |
+| Rastgele | 20 | data1 / data2 / data3 | 0.856 / 0.859 / 0.854 | 0.856 / 0.858 / 0.858 | 0.800 / 0.795 / 0.797 | 0.284 / 0.284 / 0.281 | 0.862 / 0.860 / 0.861 |
+| Veriden | 5 | data1 / data3 | 0.768 / 0.883 | 0.765 / 0.883 | 0.672 / 0.794 | 0.460 / 0.707 | 0.781 / 0.863 |
+| Veriden | 20 | data1 / data3 | 0.882 / 0.912 | 0.879 / 0.910 | 0.827 / 0.885 | 0.502 / 0.730 | 0.882 / 0.912 |
+| Veriden | 5 ve 20 | data2 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+
+**Enerji verimliliği (Mbit/J):**
+
+| Yerleşim | K | Veri seti | P | B2 | B1 | B0 | KM |
+|---|---|---|---|---|---|---|---|
+| Rastgele | 5 | data1 / data2 / data3 | 4.48 / 4.02 / 4.29 | 4.34 / 4.00 / 4.17 | 2.67 / 2.41 / 2.57 | 1.07 / 0.97 / 1.09 | 4.53 / 3.72 / 4.18 |
+| Rastgele | 20 | data1 / data2 / data3 | 5.95 / 4.05 / 4.76 | 6.06 / 4.27 / 4.99 | 4.88 / 3.58 / 4.07 | 1.78 / 1.38 / 1.53 | 5.73 / 3.80 / 4.53 |
+| Veriden | 5 | data1 / data3 | 5.13 / 6.36 | 5.10 / 6.48 | 3.83 / 5.18 | 2.63 / 4.65 | 5.26 / 6.32 |
+| Veriden | 20 | data1 / data3 | 6.32 / 6.25 | 6.41 / 6.26 | 5.59 / 6.22 | 3.53 / 5.36 | 6.19 / 6.21 |
+
+**P'nin diğer yöntemlere göre iyileşmesi** (üç ya da iki veri setindeki aralık; data2 veriden yerleşim hariç;
+\* bütün veri setlerinde Holm sonrası p < 0.05, parantez içinde yalnız anlamlı olanlar):
+
+| Yerleşim | K | vs B0 (PDR) | vs B1 (PDR) | vs B1 (EE) | vs B2 (PDR) | vs B2 (EE) | vs KM (PDR) | vs KM (EE) |
+|---|---|---|---|---|---|---|---|---|
+| Rastgele | 5 | +216 – 230%\* | +27 – 28%\* | +67 – 68%\* | +1.6 – 2.4% | +0.6 – 3.2% | −0.4 – +2.2% | −1.0 – +8.2% (data2) |
+| Rastgele | 20 | +202 – 204%\* | +7 – 8%\* | +13 – 22%\* | −0.4 – +0.1% | −1.9 – −5.3%\* | −0.9 – −0.1% | +3.8 – 6.4%\* |
+| Veriden | 5 | +25 – 67%\* | +11 – 14%\* | +23 – 34%\* | +0.1 – 0.4% | −1.8 – +0.7% | −1.7 – +2.3% | −2.4 – +0.7% |
+| Veriden | 20 | +25 – 76%\* | +3 – 7%\* | +0.5 – 13% (data1) | +0.2 – 0.4% | −0.2 – −1.3% (data1) | 0.0 – 0.1% | +0.6 – 2.1% (data1) |
+
+**Ek ölçümler (P):**
+
+| | Rastgele, K = 5 | Rastgele, K = 20 | Veriden, K = 5 (data1 / data3) | Veriden, K = 20 (data1 / data3) |
+|---|---|---|---|---|
+| BS'ye yolu olmayan CH oranı | 0.00 | 0.00 | 0.00 / 0.00 | 0.00 / 0.07 |
+| CH'sine 25 m'den uzak üye oranı | 0.29 | 0.04–0.05 | 0.21 / 0.06 | 0.03 / 0.00 |
+| Ortalama gecikme (ms) | 98–190 | 69–87 | 247 / 173 | 97 / 71 |
+
+### 11.3 Yorum
+
+1. **Ana sonuçlar yoruma bağlı değil.**
+   - P ≈ B2: PDR farkı hiçbir yerde anlamlı değil. EE'de K = 20'de statik MF %1–5 daha iyi; bu fark rastgele
+     yerleşimde üç veri setinde, veriden yerleşimde yalnız data1'de anlamlı. Adaptif MF'nin statik MF'ye
+     üstünlüğü yorum A'da olduğu gibi yorum B'de de görülmüyor.
+   - P ≫ B0 her iki yorumda da geçerli.
+2. **Değişen tek şey P ile B1 arasındaki PDR farkı.** Yorum A'da (CH sayısı serbest) LEACH ortalama 15 CH
+   seçiyordu ve PDR farkı yoktu. CH sayısı sabitlenince LEACH'in rastgele seçtiği CH'ler kötü yayılıyor. K = 5'te
+   B1'de üyelerin %47'si CH'sine 25 m'den uzak kalıyor, P'de %29. Bu yüzden P, PDR'de %3–28 önde. Bu fark
+   bulanık skordan değil, CH'lerin alana yayılmasından geliyor (bkz. madde 4).
+3. **Yorum B makalenin sayılarına daha yakın.** Yorum A'da (20 sensör) PDR 0.59 ve CH'lerin %39'u
+   bağlantısızdı. 100 sensör ve K = 20 CH ile rastgele yerleşimde PDR 0.86, data3 veriden yerleşimde 0.91.
+   Makalenin raporladığı %92.5 de data3'e ait (T11). Bu, makalenin aslında çok sayıda düğümle çalışmış olduğu
+   yorumunu destekliyor; ama Tablo 3 ile çelişkiyi ortadan kaldırmıyor.
+4. **k-means, AFL kadar iyi.** CH sayısı sabitken basit bir merkez tabanlı kümeleme (KM), PDR'de P ile aynı
+   sonucu veriyor; EE'de rastgele yerleşimde K = 20'de P %4–6 önde. Bulanık CH seçiminin katkısı büyük ölçüde
+   "iyi yayılmış CH seçmek"le sınırlı kalıyor ve bunu k-means de yapıyor. Bu bulgu özgün katkı aşamasında (K1)
+   değerlendirilecek.
+5. **K = 5 kendi başına kayıplı.** 100 × 100 m alanda 5 CH ile üyelerin yaklaşık %29'u CH'lerine 25 m'den
+   uzak kalıyor. Bu iletimlerin çoğu başarısız oluyor ve PDR 0.71–0.72'de kalıyor.
+6. **Veriden yerleşim fiziksel olarak tutarsız.**
+   - data1 ve data3'te PDR rastgele yerleşimden yüksek çıkıyor, çünkü noktalar kısmen alanın ortasında
+     toplanıyor. data3'te imputasyonla medyana çekilen nabız değerleri BS'nin hemen üstünde bir çizgi
+     oluşturuyor.
+   - data2'de ağ tamamen kopuyor.
+   - Konumlar ölçümlerin dağılımına bağlı olduğu için sonuç veri setine göre keyfi biçimde değişiyor. Bu
+     yüzden ana deneylerde rastgele yerleşim korunuyor; veriden yerleşim yalnızca makalenin şekillerini
+     yorumlamak için kullanıldı.
+
 ## Yeniden üretme
 
 Repo kökünden:
@@ -289,6 +407,10 @@ python experiments/baseline/run_e2.py
 
 ```bash
 python experiments/baseline/run_e3.py
+```
+
+```bash
+python experiments/baseline/run_e6.py
 ```
 
 Sonuçlar `results/tables/` ve `results/figures/` altına yazılır. Veri dosyaları `data/` klasöründe olmalıdır

@@ -2,6 +2,6 @@
 
 from .radio import e_rx, e_tx
 from .link import hop_delay, p_success
-from .topology import Topology, deploy
+from .topology import Topology, deploy, from_positions
 
-__all__ = ["e_rx", "e_tx", "hop_delay", "p_success", "Topology", "deploy"]
+__all__ = ["e_rx", "e_tx", "hop_delay", "p_success", "Topology", "deploy", "from_positions"]

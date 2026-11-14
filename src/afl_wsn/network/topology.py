@@ -28,11 +28,17 @@ class Topology:
         return self.n
 
 
-def deploy(cfg: SimConfig, rng: np.random.Generator) -> Topology:
-    pos = rng.uniform(0.0, cfg.area, size=(cfg.n_nodes, 2))
+def from_positions(pos: np.ndarray, cfg: SimConfig) -> Topology:
+    """Verilen konumlardan (N, 2) topoloji kurar. BS ve d_max Tablo 3'e göre."""
+    pos = np.asarray(pos, dtype=float)
     bs = np.asarray(cfg.bs, dtype=float)
     pts = np.vstack([pos, bs])
     dist = np.linalg.norm(pts[:, None, :] - pts[None, :, :], axis=-1)
     corners = np.array([[0, 0], [0, cfg.area], [cfg.area, 0], [cfg.area, cfg.area]], dtype=float)
     d_max_bs = float(np.linalg.norm(corners - bs, axis=1).max())
     return Topology(pos=pos, bs=bs, dist=dist, d_max_bs=d_max_bs)
+
+
+def deploy(cfg: SimConfig, rng: np.random.Generator) -> Topology:
+    """Düzgün rastgele yerleşim (varsayılan, CP1 §9)."""
+    return from_positions(rng.uniform(0.0, cfg.area, size=(cfg.n_nodes, 2)), cfg)
