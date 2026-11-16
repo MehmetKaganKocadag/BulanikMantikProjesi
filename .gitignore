@@ -32,3 +32,7 @@ ozel_notlar/
 # --- Gizli bilgiler ---
 .env
 kaggle.json
+
+# Rapor üreticisinin ara çıktıları (denklem görüntüleri) ve Office geçici dosyaları
+report/assets/
+~$*
