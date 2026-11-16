@@ -108,6 +108,10 @@ def cmd_sim(a):
 
 
 def main():
+    try:  # cp1254 gibi konsollarda "→" ve Türkçe karakterler çökmesin
+        sys.stdout.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd")
     f = sub.add_parser("fis", help="tek bir düğüm için CH skoru")
@@ -119,7 +123,7 @@ def main():
     r.add_argument("--nodes", type=int, default=50)
     r.add_argument("--seed", type=int, default=3)
     s = sub.add_parser("sim", help="küçük ağ simülasyonu")
-    s.add_argument("--nodes", type=int, default=20)
+    s.add_argument("--nodes", type=int, default=100)
     s.add_argument("--rounds", type=int, default=50)
     s.add_argument("--seed", type=int, default=7)
     s.add_argument("--dataset", default="data3", choices=["data1", "data2", "data3", "synthetic"])
