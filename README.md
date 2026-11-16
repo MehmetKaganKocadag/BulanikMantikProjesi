@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Durum** | 🟡 Checkpoint 3 — Baseline sistem çalışıyor, ilk deney sonuçları üretildi |
+| **Durum** | 🟡 Checkpoint 5 — Özgün katkılar (K1, K6) uygulandı ve deneysel olarak karşılaştırıldı |
 | **Dil / Ortam** | Python 3.13 |
 
 ---
@@ -104,7 +104,7 @@ python -m unittest discover -s tests -v
 python experiments/baseline/fis_design.py
 ```
 
-İlki birim testlerini (32 test) çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
+İlki birim testlerini (40 test) çalıştırır. İkincisi MF grafiklerini, kontrol yüzeyini ve kural tablosunu
 `results/` altına üretir.
 
 Yeniden gerçekleştirme deneyleri (veri dosyaları `data/` altında olmalı; bkz. [data/README.md](data/README.md)):
@@ -125,8 +125,19 @@ python experiments/baseline/run_e3.py
 python experiments/baseline/run_e6.py
 ```
 
-Deneyler mevcut CPU çekirdeklerini paralel kullanır. 12 çekirdekte E1–E3 birlikte yaklaşık 7 dakika, E6 yaklaşık
-12 dakika sürer.
+Özgün katkı deneyleri:
+
+```bash
+python experiments/proposed/run_k1.py
+```
+
+```bash
+python experiments/proposed/run_k6.py
+```
+
+Deneyler mevcut CPU çekirdeklerini paralel kullanır ve ilerlemeyi ekrana yazar. 12 çekirdekte yaklaşık süreler:
+E1–E3 birlikte 7 dakika, E6 12 dakika, K1 40 dakika, K6 4 dakika. E6, K1 ve K6 betikleri `--analyze`
+seçeneğiyle koşuları tekrarlamadan yalnızca tabloları ve grafikleri yeniden üretir.
 
 ## Reproduction Experiments
 
@@ -143,7 +154,13 @@ Karşılaştırılan yöntemler: **P** (AFL + PSO-GA, makalenin yöntemi), **B2*
 
 ## Proposed Extension
 
-_(Checkpoint 4'te eklenecek.)_ Aday katkılar [docs/checkpoint1_makale_analizi.md](docs/checkpoint1_makale_analizi.md#8-özgün-katkı-adayları) içinde listelenmiştir.
+Ayrıntılar: [Checkpoint 4 — Katkı Önerisi](docs/checkpoint4_katki_onerisi.md). Hipotezler ve başarı
+ölçütleri deneylerden önce orada sabitlendi.
+
+| Katkı | Ne değişiyor | Neden | Baseline |
+|---|---|---|---|
+| **K1 — Hibrit adaptif MF (PH)** | Adaptif bölümleme statik bölümlemeye ρ oranında çekiliyor: (1 − ρ)·adaptif + ρ·(0, 0.5, 1). ρ ayrı tohumlarda seçiliyor. Ağ ömrü (son düğüm ölene kadar), homojen ve heterojen başlangıç enerjisiyle ölçülüyor | Adaptif MF, dar enerji bandını bütün terim aralığına yayıp önemsiz farkları büyütüyordu (CP3) | P (makalenin adaptif MF'si), B2 (statik MF) |
+| **K6 — Dijkstra başlatmalı PSO-GA (PD)** | Sürünün ilk parçacığı Dijkstra'nın yolunu kodluyor. Ayrıca yönlendirme ablasyonu: Dijkstra, yalnız PSO, yalnız GA, PSO-GA, doğrudan iletim | PSO-GA'nın bileşenleri ayrı ayrı test edilmemişti; Dijkstra 40–90 kat ucuzdu (CP3) | P (makalenin PSO-GA'sı) |
 
 ## Experimental Results
 
@@ -162,7 +179,22 @@ _(Checkpoint 4'te eklenecek.)_ Aday katkılar [docs/checkpoint1_makale_analizi.m
 
 ![E1 N=20](results/figures/e1_metrics_N20.png)
 
-_(Özgün katkı sonuçları Checkpoint 5'te eklenecek.)_
+**Özgün katkılar (Checkpoint 5):** Ayrıntılar: [docs/checkpoint5_deneysel_sonuclar.md](docs/checkpoint5_deneysel_sonuclar.md).
+
+| Ölçüt | Baseline | Geliştirilen | Değişim |
+|---|---|---|---|
+| K1 — Ağ ömrü boyunca teslim edilen okuma | P: 9020 | PH: 8945 | −0.8% (anlamsız) |
+| K6 — En iyi rotaya ulaşma (N = 100, yıpranmış ağ) | P: %67.3 | PD: %89.5 | +22.2 puan |
+| K6 — Rota başına CPU süresi (N = 100, yıpranmış ağ) | P: 48.5 ms | PD: 36.9 ms | −24% |
+
+- **K1 başarı ölçütünü karşılamadı.** Hibrit MF, adaptif ya da statik MF'den anlamlı biçimde iyi değil. Ağ
+  ömrü boyunca adaptif MF statik MF'nin biraz önüne geçiyor (%0.4–1.5). MF değişikliklerinin etkisi sınırlı,
+  çünkü CH seçimi skorların sıralamasına dayanıyor ve bütün bölümlemeler her girdide monoton.
+- **K6 başarı ölçütünü karşıladı.** PD en iyi rotayı her ağ boyutunda P'den daha sık, daha ucuza buluyor ve
+  Dijkstra'dan hiçbir zaman kötü değil. Ağ düzeyinde ise bütün optimizasyon yöntemleri aynı PDR ve enerji
+  verimliliğini veriyor; Dijkstra 40–81 kat daha ucuz.
+
+![K6 algoritma düzeyi](results/figures/k6_algorithm.png)
 
 ## Limitations
 
@@ -204,5 +236,6 @@ Bkz. [references/README.md](references/README.md).
 
 Bu projede üretken yapay zekâ araçları (Claude); makale analizi ve uygulama planı taslaklarının hazırlanmasında,
 repo iskeletinin oluşturulmasında, bulanık çekirdek, simülatör, yönlendirme ve deney kodlarının ilk
-sürümlerinin yazılmasında ve deney sonuçlarının raporlanmasında yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
+sürümlerinin yazılmasında, özgün katkıların (K1, K6) tasarımı ve kodlanmasında ve deney sonuçlarının
+raporlanmasında yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
 ayrıntıları proje ilerledikçe bu bölüme ve teknik rapora eklenecektir.
