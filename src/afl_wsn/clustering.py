@@ -27,7 +27,7 @@ def fuzzy_inputs(energy, ls, alive, topo, cfg: SimConfig) -> np.ndarray:
     """Denk. 2–5: her düğüm için [E_r, D_BS, N_d, L_s] (şekil (N, 4))."""
     n = topo.n
     d = topo.dist[:n, :n]
-    er = np.clip(energy / cfg.e_init, 0.0, 1.0)
+    er = np.clip(energy / cfg.e_max, 0.0, 1.0)
     dbs = topo.dist[:n, n] / topo.d_max_bs
     neigh = (d <= cfg.comm_range) & alive[None, :] & ~np.eye(n, dtype=bool)
     nd = neigh.sum(axis=1) / n
@@ -38,7 +38,7 @@ class FuzzyClustering:
     def __init__(self, cfg: SimConfig, adaptive: bool = True) -> None:
         self.cfg = cfg
         self.adaptive = adaptive
-        make = (lambda: AdaptivePartition(lam=cfg.mf_lambda)) if adaptive else static_partition
+        make = (lambda: AdaptivePartition(lam=cfg.mf_lambda, shrink=cfg.mf_rho)) if adaptive else static_partition
         self.fis = FuzzyCHSystem({name: make() for name in INPUTS}, defuzz=cfg.defuzz)
         self.last_scores: np.ndarray | None = None
 
@@ -138,7 +138,7 @@ class KMeansClustering:
 
     def select(self, energy, ls, alive, topo, rng, epoch: int) -> np.ndarray:
         cfg, n = self.cfg, topo.n
-        cand = np.flatnonzero(alive & (energy / cfg.e_init >= cfg.ch_min_energy))
+        cand = np.flatnonzero(alive & (energy / cfg.e_max >= cfg.ch_min_energy))
         ch = np.zeros(n, dtype=bool)
         if cand.size == 0:
             return ch

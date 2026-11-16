@@ -207,8 +207,29 @@ def _ga_offspring(X: np.ndarray, F: np.ndarray, pc: PSOConfig, rng) -> np.ndarra
     return kids
 
 
-def route_pso_ga(src: int, g: RoutingGraph, cfg: SimConfig, rng, record: bool = False) -> RouteResult:
-    """Hibrit PSO-GA (mode="pso_ga"), yalnız PSO (mode="pso") ya da yalnız GA (mode="ga")."""
+def seed_keys(path: list[int], m: int, pc: PSOConfig, rng) -> np.ndarray:
+    """Çözümlendiğinde tam olarak `path`i veren öncelik vektörü.
+
+    Yol üzerindeki düğümlere aralığın üst yarısında, yol boyunca azalan öncelikler; diğer
+    düğümlere alt yarıdan rastgele değerler verilir. Böylece her adımda menzildeki ziyaret
+    edilmemiş düğümler arasında en yüksek öncelik yolun bir sonraki düğümüne aittir.
+    """
+    lo, hi = pc.pos_range
+    mid = 0.5 * (lo + hi)
+    keys = rng.uniform(lo, mid, size=m)
+    rest = path[1:]
+    for j, v in enumerate(rest):
+        keys[v] = hi - (hi - mid) * j / len(rest)
+    return keys
+
+
+def route_pso_ga(src: int, g: RoutingGraph, cfg: SimConfig, rng, record: bool = False,
+                 seed_path: list[int] | None = None) -> RouteResult:
+    """Hibrit PSO-GA (mode="pso_ga"), yalnız PSO (mode="pso") ya da yalnız GA (mode="ga").
+
+    seed_path verilirse sürünün ilk parçacığı bu yolu kodlar (K6: Dijkstra ile başlatma);
+    sonuç hiçbir zaman bu yoldan kötü olamaz.
+    """
     t0 = time.perf_counter()
     pc = cfg.pso
     if not reachable(src, g):
@@ -225,6 +246,8 @@ def route_pso_ga(src: int, g: RoutingGraph, cfg: SimConfig, rng, record: bool = 
         return f, paths
 
     X = rng.uniform(lo, hi, size=(P, M))
+    if seed_path is not None:
+        X[0] = seed_keys(seed_path, M, pc, rng)
     V = rng.uniform(-pc.vmax, pc.vmax, size=(P, M))
     F, paths = evaluate(X)
     evals = P
@@ -272,6 +295,16 @@ def route_pso_ga(src: int, g: RoutingGraph, cfg: SimConfig, rng, record: bool = 
     return RouteResult(_trim(G_path), Gf, evals, it, time.perf_counter() - t0, True, history)
 
 
+def route_pso_ga_ds(src: int, g: RoutingGraph, cfg: SimConfig, rng, record: bool = False) -> RouteResult:
+    """K6 önerisi: Dijkstra'nın yolu ile başlatılan PSO-GA. Süre ve sayaçlar iki aşamayı birlikte içerir."""
+    t0 = time.perf_counter()
+    dj = route_dijkstra(src, g, cfg)
+    res = route_pso_ga(src, g, cfg.with_(pso__mode="pso_ga"), rng, record=record,
+                       seed_path=dj.path if dj.connected else None)
+    res.seconds = time.perf_counter() - t0
+    return res
+
+
 def find_route(src: int, g: RoutingGraph, cfg: SimConfig, rng) -> RouteResult:
     if cfg.routing == "direct":
         return route_direct(src, g, cfg)
@@ -279,4 +312,6 @@ def find_route(src: int, g: RoutingGraph, cfg: SimConfig, rng) -> RouteResult:
         return route_dijkstra(src, g, cfg)
     if cfg.routing in ("pso_ga", "pso", "ga"):
         return route_pso_ga(src, g, cfg.with_(pso__mode=cfg.routing), rng)
+    if cfg.routing == "pso_ga_ds":
+        return route_pso_ga_ds(src, g, cfg, rng)
     raise ValueError(f"Bilinmeyen yönlendirme: {cfg.routing}")

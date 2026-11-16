@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import sys
+import time
 from concurrent.futures import ProcessPoolExecutor
 from itertools import product
 
@@ -24,16 +26,22 @@ METHODS: dict[str, dict] = {
     "R2": {"clustering": "afl", "routing": "pso", "label": "AFL + yalnız PSO"},
     "R3": {"clustering": "afl", "routing": "ga", "label": "AFL + yalnız GA"},
     "KM": {"clustering": "kmeans", "routing": "pso_ga", "label": "k-means + PSO-GA"},  # yalnız sabit K (CP3 §11)
+    # Checkpoint 4 önerileri
+    "PH": {"clustering": "afl", "routing": "pso_ga", "config": {"mf_rho": 0.5},
+           "label": "Hibrit adaptif MF + PSO-GA"},  # ρ, K1 ayar deneyinde seçilir (CP4 §2.3)
+    "R0": {"clustering": "afl", "routing": "direct", "label": "AFL + doğrudan"},
+    "PD": {"clustering": "afl", "routing": "pso_ga_ds", "label": "AFL + Dijkstra başlatmalı PSO-GA"},
 }
 
 METRICS = ["pdr", "delay_ms", "throughput_bps", "ee_bit_per_j"]
-LOWER_IS_BETTER = {"delay_ms"}
+LOWER_IS_BETTER = {"delay_ms", "route_fitness_mean", "route_ms_per_epoch", "energy_j", "n_ch_std"}
 
 
 def run_one(task: dict) -> dict:
     """task: {method, dataset, seed, overrides: dict, tag: dict}"""
     m = METHODS[task["method"]]
-    cfg = SimConfig().with_(clustering=m["clustering"], routing=m["routing"], **task.get("overrides", {}))
+    kw = {"clustering": m["clustering"], "routing": m["routing"], **m.get("config", {}), **task.get("overrides", {})}
+    cfg = SimConfig().with_(**kw)
     stream = get_stream(task["dataset"], np.random.default_rng([task["seed"], 9]))
     topo = offsets = None
     if cfg.placement == "data":
@@ -46,12 +54,23 @@ def run_one(task: dict) -> dict:
     return row
 
 
+def progress(iterable, total: int, label: str = "koşu"):
+    """Tamamlanan iş sayısını yaklaşık %5 aralıklarla stderr'e yazar (tahmini kalan süreyle)."""
+    t0, step = time.perf_counter(), max(1, total // 20)
+    for i, item in enumerate(iterable, 1):
+        if i % step == 0 or i == total:
+            el = time.perf_counter() - t0
+            print(f"  {i}/{total} {label}, {el / 60:.1f} dk geçti, ~{el / i * (total - i) / 60:.1f} dk kaldı",
+                  file=sys.stderr, flush=True)
+        yield item
+
+
 def run_many(tasks: list[dict], workers: int | None = None) -> list[dict]:
     workers = workers or max(1, (os.cpu_count() or 2) - 1)
     if workers == 1:
-        return [run_one(t) for t in tasks]
+        return list(progress(map(run_one, tasks), len(tasks)))
     with ProcessPoolExecutor(max_workers=workers) as ex:
-        return list(ex.map(run_one, tasks, chunksize=1))
+        return list(progress(ex.map(run_one, tasks, chunksize=1), len(tasks)))
 
 
 def make_tasks(methods, datasets, seeds, overrides=None, tag=None, keep_rounds=False) -> list[dict]:

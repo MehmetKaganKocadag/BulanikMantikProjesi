@@ -65,6 +65,10 @@ class Simulation:
         self.rng = np.random.default_rng([seed, 2])
         n = cfg.n_nodes
         self.energy = np.full(n, cfg.e_init, dtype=float)
+        if cfg.e_init_spread > 0:  # heterojen başlangıç enerjisi; ayrı tohum akışı → yöntemler eşleşik
+            u = np.random.default_rng([seed, 3]).uniform(-cfg.e_init_spread, cfg.e_init_spread, n)
+            self.energy *= 1.0 + u
+        self.e_start = self.energy.copy()
         self.ls = np.ones(n)
         self.clustering = make_clustering(cfg)
 

@@ -87,6 +87,9 @@ class AdaptivePartition(ThreeTermPartition):
     min_width : c - a için alt sınır. Tüm düğümler aynı değere sahipken
         (ör. ilk turda bütün enerjiler 1.0) bölümlemenin çökmesini önler.
     domain : Değişkenin evreni; normalize girdiler için [0, 1].
+    shrink : ρ ∈ [0, 1]. Çıktı bölümlemesi, adaptif (a, b, c) ile statik bölümlemenin
+        (evren uçları ve ortası) dışbükey birleşimidir: (1 − ρ)·adaptif + ρ·statik.
+        ρ = 0 makalenin adaptif MF'si, ρ = 1 statik MF'dir (K1, CP4 §2).
     """
 
     a: float = 0.0
@@ -96,7 +99,9 @@ class AdaptivePartition(ThreeTermPartition):
     center: str = "median"
     min_width: float = 0.05
     domain: tuple[float, float] = (0.0, 1.0)
+    shrink: float = 0.0
     _initialized: bool = field(default=False, repr=False)
+    _raw: tuple[float, float, float] = field(default=(0.0, 0.5, 1.0), repr=False)
 
     def update(self, values) -> None:
         """Bir turun başında aktif düğümlerin değerleriyle (a, b, c)'yi günceller."""
@@ -117,11 +122,16 @@ class AdaptivePartition(ThreeTermPartition):
             a = c - self.min_width
 
         # Denk. 1: b(t+1) = λ·b(t) + (1-λ)·b_new  (ilk güncellemede b = b_new)
-        b = b_new if not self._initialized else self.lam * self.b + (1 - self.lam) * b_new
+        b = b_new if not self._initialized else self.lam * self._raw[1] + (1 - self.lam) * b_new
 
         # b, (a, c) aralığının içinde kalmalı.
         margin = 0.05 * (c - a)
         b = float(np.clip(b, a + margin, c - margin))
 
-        self.a, self.b, self.c = a, b, c
+        self._raw = (a, b, c)
         self._initialized = True
+        lo, hi = self.domain
+        r = self.shrink
+        self.a = (1 - r) * a + r * lo
+        self.b = (1 - r) * b + r * 0.5 * (lo + hi)
+        self.c = (1 - r) * c + r * hi

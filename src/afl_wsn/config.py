@@ -35,6 +35,7 @@ class SimConfig:
     bs: tuple[float, float] = (50.0, 50.0)
     comm_range: float = 25.0
     e_init: float = 2.0
+    e_init_spread: float = 0.0  # > 0: başlangıç enerjisi e_init·(1 + U(−s, s)) (heterojen ağ, K1)
     packet_bits: int = 512 * 8
     placement: str = "uniform"  # "uniform" (düzgün rastgele) | "data" (veri kaydından konum, CP3 §11)
 
@@ -74,13 +75,19 @@ class SimConfig:
     ch_min_energy: float = 0.05  # CH adaylığı için E_r alt sınırı
     leach_p: float = 0.1
     mf_lambda: float = 0.7
+    mf_rho: float = 0.0  # adaptif MF'nin statik MF'ye çekilme oranı ρ (K1; 0 = makale)
     defuzz: str = "weighted_average"
 
     # --- Yönlendirme ---
-    routing: str = "pso_ga"  # "direct" | "dijkstra" | "pso" | "ga" | "pso_ga"
+    routing: str = "pso_ga"  # "direct" | "dijkstra" | "pso" | "ga" | "pso_ga" | "pso_ga_ds" (K6)
     fitness_weights: tuple[float, float, float, float] = (0.25, 0.25, 0.25, 0.25)  # α, β, γ, δ
     infeasible_fitness: float = 10.0
     pso: PSOConfig = field(default_factory=PSOConfig)
+
+    @property
+    def e_max(self) -> float:
+        """E_r normalizasyonu için olası en büyük başlangıç enerjisi."""
+        return self.e_init * (1.0 + self.e_init_spread)
 
     def with_(self, **kwargs) -> "SimConfig":
         """Değiştirilmiş bir kopya döndürür. PSO alanları 'pso__w=0.5' biçiminde verilebilir."""
