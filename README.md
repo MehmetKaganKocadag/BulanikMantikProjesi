@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Durum** | 🟡 Checkpoint 5 — Özgün katkılar (K1, K6) uygulandı ve deneysel olarak karşılaştırıldı |
+| **Durum** | 🟢 Final — Teknik rapor ([report/report.pdf](report/report.pdf)) ve sunum ([presentation/presentation.pdf](presentation/presentation.pdf)) hazır |
 | **Dil / Ortam** | Python 3.13 |
 
 ---
@@ -139,6 +139,26 @@ Deneyler mevcut CPU çekirdeklerini paralel kullanır ve ilerlemeyi ekrana yazar
 E1–E3 birlikte 7 dakika, E6 12 dakika, K1 40 dakika, K6 4 dakika. E6, K1 ve K6 betikleri `--analyze`
 seçeneğiyle koşuları tekrarlamadan yalnızca tabloları ve grafikleri yeniden üretir.
 
+Canlı demo (bulanık çıkarım adım adım, yönlendirme karşılaştırması ve küçük bir ağ simülasyonu):
+
+```bash
+python experiments/demo.py
+```
+
+```bash
+python experiments/demo.py fis 0.9 0.3 0.4 0.95 --adaptive 0.85 0.98
+```
+
+Rapor ve sunum, deney çıktılarından yeniden üretilebilir (PDF dönüşümü Windows'ta Word ve PowerPoint ister):
+
+```bash
+python report/build_report.py
+```
+
+```bash
+python presentation/build_presentation.py
+```
+
 ## Reproduction Experiments
 
 | Deney | Makaledeki karşılığı | Kapsam |
@@ -198,8 +218,16 @@ Ayrıntılar: [Checkpoint 4 — Katkı Önerisi](docs/checkpoint4_katki_onerisi.
 
 ## Limitations
 
-_(Proje ilerledikçe güncellenecek.)_ Referans makalenin bilinen sınırlılıkları ve tutarsızlıkları için:
-[Checkpoint 1 analizi, bölüm 7](docs/checkpoint1_makale_analizi.md#7-eleştirel-değerlendirme-tutarsızlıklar-ve-eksikler).
+- **Model varsayımları:** Kanal, bağlantı, gecikme ve trafik modelleri makalede tanımlı değil; bu projede
+  varsayıldı ([CP2](docs/checkpoint2_uygulama_plani.md)). Sonuçlar mutlak değerler olarak değil, aynı
+  simülatördeki göreli karşılaştırmalar olarak okunmalı.
+- **Farklı rakipler:** Makalenin karşılaştırdığı ANFIS, QPSO ve ECPF'nin kodu yok; yerine aynı simülatörde LEACH
+  tabanlı baseline'lar kullanıldı.
+- **İdeal varsayımlar:** Tek kanal, çarpışma yok, kontrol paketlerinin enerjisi ihmal edildi.
+- **Erken durma:** PSO tabanlı yöntemlerde 20 iterasyonluk sabır bu projenin varsayımı.
+- **K1 ölçeği:** Yalnızca N = 50 ve E₀ = 0.25 J denendi.
+
+Referans makalenin tutarsızlıkları (T1–T24): [Checkpoint 1 analizi, bölüm 7](docs/checkpoint1_makale_analizi.md#7-eleştirel-değerlendirme-tutarsızlıklar-ve-eksikler).
 
 ## Repository Structure
 
@@ -208,7 +236,7 @@ _(Proje ilerledikçe güncellenecek.)_ Referans makalenin bilinen sınırlılık
 ├── LICENSE
 ├── requirements.txt
 ├── .gitignore
-├── docs/                    Checkpoint raporları ve tasarım notları
+├── docs/                    Checkpoint 1–5 belgeleri ve literatür taraması
 ├── src/afl_wsn/             Kaynak kod
 │   ├── fuzzy/               Üyelik fonksiyonları, kural tabanı, çıkarım
 │   ├── network/             Radyo enerjisi, bağlantı, gecikme, topoloji
@@ -220,22 +248,31 @@ _(Proje ilerledikçe güncellenecek.)_ Referans makalenin bilinen sınırlılık
 ├── tests/                   Birim testleri (unittest)
 ├── data/                    Veri seti açıklamaları (ham veri gitignore'da)
 ├── experiments/baseline/    Referans yöntemin yeniden gerçekleştirme deneyleri
-├── experiments/proposed/    Özgün katkı deneyleri
+├── experiments/proposed/    Özgün katkı deneyleri (K1, K6)
+├── experiments/demo.py      Canlı demo
 ├── results/figures/         Üretilen grafikler
 ├── results/tables/          Üretilen sonuç tabloları (CSV)
-├── presentation/            presentation.pdf
-├── report/                  report.pdf
+├── presentation/            presentation.pdf (+ .pptx ve üretici betik)
+├── report/                  report.pdf (+ .docx ve üretici betik)
 └── references/README.md     Kaynakça (IEEE)
 ```
 
 ## References
 
-Bkz. [references/README.md](references/README.md).
+IEEE formatında, bütün künyeleri Crossref'te DOI ile doğrulanmış kaynakça:
+[references/README.md](references/README.md). Güncel literatürün (2022–2026) değerlendirmesi:
+[docs/literatur_taramasi.md](docs/literatur_taramasi.md).
 
 ## Generative AI Usage Disclosure
 
-Bu projede üretken yapay zekâ araçları (Claude); makale analizi ve uygulama planı taslaklarının hazırlanmasında,
-repo iskeletinin oluşturulmasında, bulanık çekirdek, simülatör, yönlendirme ve deney kodlarının ilk
-sürümlerinin yazılmasında, özgün katkıların (K1, K6) tasarımı ve kodlanmasında ve deney sonuçlarının
-raporlanmasında yardımcı olarak kullanılmıştır. Tüm içerik öğrenci tarafından okunup doğrulanmaktadır. Kullanımın
-ayrıntıları proje ilerledikçe bu bölüme ve teknik rapora eklenecektir.
+Referans makale öğrenci tarafından okunmuş ve incelenmiştir. Bu projede Anthropic'in Claude modeli (Claude Code
+ortamında) yardımcı araç olarak kullanılmıştır:
+- makale analizi, tutarsızlıkların belirlenmesi ve uygulama planı taslakları;
+- repo iskeleti; bulanık çekirdek, simülatör, yönlendirme ve deney kodlarının ilk sürümleri ve birim testleri;
+- özgün katkıların (K1, K6) tasarımı ve kodlanması;
+- literatür taramasında aday çalışmaların bulunması (bütün künyeler Crossref'te DOI ile doğrulandı,
+  doğrulanamayan adaylar kullanılmadı);
+- grafikler, checkpoint belgeleri, teknik rapor ve sunumun taslakları.
+
+Raporlanan bütün sonuçlar depodaki betiklerle üretilmiştir ve yeniden üretilebilir. Kodun, deneylerin ve
+metnin doğruluğundan öğrenci sorumludur. Aynı beyan teknik raporda da yer almaktadır.
